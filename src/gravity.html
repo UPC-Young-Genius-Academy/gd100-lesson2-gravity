@@ -1,0 +1,170 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+	<title>Project 1.1: Gravity and Input</title>
+	<style>
+		body 
+		{
+			background-color: #222222;
+			color: #AAAAAA;
+		}
+	</style>
+	<script src="pixi.js"></script>
+</head>
+<body>
+	<h2>JavaScript Development Project 1.1: Gravity and Input<h2>
+	<h3>Created by: [Your Name Here]</h3>
+    <script>
+
+	//
+    // DO NOT CHANGE
+    //
+	
+	// Maintain a list of sprites
+	var allSprites = [];
+	
+	// Creates a new stage. A stage is used to store your game things
+    // like characters and background images. 0x007FFF is the background
+	// color - this is sky blue.
+    var stage = new PIXI.Stage(0x007FFF);
+	
+    // Creates a new renderer. The renderer is responsible for drawing
+    // things, like characters and backgrounds, to screen.
+    var renderer = PIXI.autoDetectRenderer(1280, 720, null);
+
+    // The renderer is automatically inserted into the web page so that
+    // it may be placed in the center and visible to your user.
+    document.body.appendChild(renderer.view);
+    renderer.view.style.position = "absolute";
+    renderer.view.style.left = ((window.innerWidth - renderer.width) / 2) + "px";
+    renderer.view.style.top = ((window.innerHeight - renderer.height) / 2) + "px";
+
+	// This function scrolls the texture on all sprites. This scrolling
+	//   is what creates the background parallax effect.
+	function scrollAllSprites() {
+	    // Decrement the x-coordinate of your sprites in order to create movement. Sprites that are further back in the scene
+		for (i = 0; i < allSprites.length; i++)
+		{
+			var sprite = allSprites[i];
+			
+			sprite.tilePosition.x -= sprite.Scroll.x;
+		}
+	}
+	
+	// This function limits the up and down speed of the bird. Allowing the bird
+	// to rise or fall too quickly hurts the game playability
+	function regulateSpeed() {
+		for (i = 0; i < allSprites.length; i++)
+		{
+			var sprite = allSprites[i];
+			
+			sprite.Speed.y = Math.max(sprite.Speed.y, -10);
+			sprite.Speed.y = Math.min(sprite.Speed.y,  10);
+		}
+	}
+	
+	// This function creates a sprite using the specified texture as an image.
+	//   texture - the texture to use by the sprite
+	//   screenHeight - the height of the sprite as drawn on the screen
+	//   screenPosY - the y-postion of the sprite as drawn on the screen
+	//   textureHeight - the height of the texture region used by this sprite
+	//   textureScaleX - the amount of stretch applied to the texture
+	//   texturePosY - the y-coordinate of the texture.
+	//   textureScrollSpeed - controls the speed of the parallex scrolling effect
+	function loadSprite(texture, screenHeight, screenPosY, textureHeight, texturePosY, textureScaleX, textureScrollSpeed) {
+		var sprite = new PIXI.TilingSprite(texture, renderer.width, screenHeight);
+		sprite.tileScale.y = screenHeight / textureHeight;
+		sprite.tileScale.x = textureScaleX;
+		sprite.position.y = screenPosY;
+		sprite.tilePosition.y = texture.height - texturePosY;
+		sprite.Scroll = new Object();
+		sprite.Scroll.x = textureScrollSpeed;
+		sprite.Speed = new Object();
+		sprite.Speed.x = 0;
+		sprite.Speed.y = 0;
+		allSprites.push(sprite);
+		stage.addChild(sprite);
+		return sprite;
+	}
+	
+	// This function creates the bird sprite using the specified texture as an image.
+	//   texture - the texture to use by the sprite
+	//   screenHeight - the height of the sprite as drawn on the screen
+	function loadBirdSprite(texture, screenHeight) {
+		var sprite = loadSprite(texture, screenHeight, renderer.height / 2 - screenHeight / 2, texture.height, 0, screenHeight / texture.height, 0);
+		sprite.width = screenHeight;
+		sprite.position.x = renderer.width / 2 - screenHeight / 2;
+		
+		stage.mousedown = stage.touchstart = function()
+		{
+			applyFlap(sprite);
+		}
+		
+		return sprite;
+	}
+	
+	// This function performs a single iteration of the rendering loop.
+	function renderLoopIteration() {
+	    // This function call triggers a future iteration of the rendering loop.
+	    requestAnimFrame(renderLoopIteration);
+
+		// Your update scene function which is responsible moving around your
+		// objects.
+		scrollAllSprites();
+		regulateSpeed();
+		animateScene();
+
+	    // Draws your scene to the screen.
+	    renderer.render(stage);
+	}
+	
+	//
+    // YOUR CODE STARTS HERE
+	//
+	
+	// Load your texture here
+	var backgroundTexture = PIXI.Texture.fromImage("background.png");
+	var birdTexture = PIXI.Texture.fromImage("bird.png");
+	
+	// loading all sprites in order
+	var distantMountains = loadSprite(backgroundTexture, 550, 42 , 128, 128, 4.0, 0.1);
+	var nearMountains    = loadSprite(backgroundTexture, 550, 42 , 128, 256, 4.0, 0.8);
+	var distantClouds    = loadSprite(backgroundTexture, 128, 0  , 64 , 0  , 1.2, 1);
+	var nearClouds       = loadSprite(backgroundTexture, 128, 48 , 64 , 64 , 1.2, 3);
+	var ground           = loadSprite(backgroundTexture, 128, 592, 64 , 448, 1.2, 8);
+	
+	var bird = loadBirdSprite(birdTexture, 64);
+	
+	// Video games work by repeatedly making small updates to the scene
+    // and then drawing the scene. Game developers refer to this as the
+    // "rendering loop". This line starts the rendering loop.
+	requestAnimFrame(renderLoopIteration);
+	
+	// This function drops the bird based on gravity rules.
+	function applyGravity(bird) {
+		// TASK :: decrease (-=) the y-Speed (Speed.y) of the bird by some small number (less than 1).
+		//  Experiment with different numbers until you find one that works well.
+		
+		// The bird's position is moved slightly based on the speed.
+		bird.position.y -= bird.Speed.y;
+	}
+	
+	// This function lifts the bird by increasing his speed in the y-direction.
+	//   This function is called every time the user clicks.
+	function applyFlap(bird)
+	{
+		// TASK :: increase (+=) the y-Speed (Speed.y) of the bird by some number. Experiment with different numbers
+		//   until you find one that works well.
+		
+	}
+	
+	// This function is used to update game animations. You will use this function.
+	//   to apply gravity to the bird.
+	function animateScene() {
+		// TASK :: invoke the applyGravity function and pass your bird variable as a parameter
+	
+	}
+	</script>
+
+	</body>
+</html>
